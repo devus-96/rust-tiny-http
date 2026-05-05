@@ -23,10 +23,10 @@ impl Query {
         if query_string.trim().len() > 0 {
             let re = Regex::new(r"([^=&]+)(=([^&]*))?").unwrap();
             for cap in re.captures_iter(query_string) {
-                let key = cap.at(1).unwrap();
+                let key = cap.get(1).map(|m| m.as_str()).unwrap();
                 // TODO: Decode query string (see this http://unixpapa.com/js/querystring.html)
-                let val = cap.at(3).unwrap_or("");
-                let mut query_vec = data.entry(key.to_owned()).or_insert(Vec::new());
+                let val = cap.get(3).map(|m| m.as_str()).unwrap_or("");
+                let query_vec = data.entry(key.to_owned()).or_insert(Vec::new());
                 query_vec.push(val.to_owned());
             }
         }

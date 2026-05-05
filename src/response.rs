@@ -17,8 +17,8 @@ pub struct Response {
 }
 
 impl Response {
-    pub fn from_stream(stream: &TcpStream) -> Result<Response, Box<Error>> {
-        let stream = try!(stream.try_clone());
+    pub fn from_stream(stream: &TcpStream) -> Result<Response, Box<dyn Error>> {
+        let stream = stream.try_clone()?;
 
         Ok(Response {
             http_version: "1.0".to_owned(),
@@ -85,13 +85,13 @@ impl Response {
         self.headers_written = true;
 
         let status_line = format!("HTTP/{} {} {}\r\n", self.http_version, self.status, self.status_text);
-        try!(self.stream.write(status_line.as_bytes()));
+        self.stream.write(status_line.as_bytes())?;
 
-        try!(self.stream.write(format!("{}", self.headers.to_string()).as_bytes()));
-        try!(self.stream.write(b"\r\n"));
+        self.stream.write(format!("{}", self.headers.to_string()).as_bytes())?;
+        self.stream.write(b"\r\n")?;
 
         let result = cb(&mut self.stream);
-        try!(self.stream.get_mut().shutdown(Shutdown::Both));
+        self.stream.get_mut().shutdown(Shutdown::Both)?;
         result
     }
 }

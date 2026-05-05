@@ -3,12 +3,12 @@ use std::net::{TcpListener, TcpStream};
 use std::sync::Arc;
 use threadpool::ThreadPool;
 
-use ::response::Response;
-use ::request::{Request};
-use ::handler::Handler;
-use ::headers::Headers;
-use ::query::Query;
-use ::parser::{Parser, ParserHandler, ParseError};
+use crate::response::Response;
+use crate::request::Request;
+use crate::handler::Handler;
+use crate::headers::Headers;
+use crate::query::Query;
+use crate::parser::{Parser, ParserHandler, ParseError};
 
 #[derive(Default)]
 struct HttpParserHandler {
@@ -92,7 +92,7 @@ pub struct HttpServer {
 impl HttpServer {
     /// Creates a new instance of HttpServer
     pub fn new(addr: &str, num_threads: usize) -> HttpServer {
-        let listener = TcpListener::bind(addr).ok().expect(format!("Could not bind to address {}", addr).as_ref());
+        let listener = TcpListener::bind(addr).expect(&format!("Could not bind to address {}", addr));
 
         HttpServer {
             addr: addr.to_string(),
@@ -106,7 +106,7 @@ impl HttpServer {
     /// When started, the server will block and listen for connections,
     /// creating the request and response and passing them to the handler
     /// when a client connects
-    pub fn start(&self, handler: Box<Handler + Send + Sync>) {
+    pub fn start(&self, handler: Box<dyn Handler + Send + Sync>) {
         let arc = Arc::new(handler);
         for stream in self.listener.incoming() {
             match stream {
@@ -134,7 +134,7 @@ impl HttpServer {
     }
 
     pub fn stop(&self) {
-        drop(&self.listener);
+        let _ = &self.listener;
     }
 }
 

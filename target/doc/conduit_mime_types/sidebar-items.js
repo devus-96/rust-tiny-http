@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_extension","get_mime_type","mime_for_path"]};

@@ -24,7 +24,7 @@ impl Headers {
         let name = header[0];
 
         for value in header[1].split(',') {
-            let mut vec = self.data.entry(name.trim().to_owned()).or_insert(Vec::<String>::new());
+            let vec = self.data.entry(name.trim().to_owned()).or_insert(Vec::<String>::new());
             vec.push(value.trim().to_owned());
         }
 
@@ -32,7 +32,7 @@ impl Headers {
     }
 
     pub fn insert(&mut self, name: &str, value: &str) {
-        let mut vec = self.data.entry(name.to_owned()).or_insert(Vec::<String>::new());
+        let vec = self.data.entry(name.to_owned()).or_insert(Vec::<String>::new());
         vec.push(value.to_owned());
     }
 

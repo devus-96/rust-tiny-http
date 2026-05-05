@@ -1,4 +1,4 @@
-extern crate http_server;
+extern crate rust_http as http_server;
 extern crate argparse;
 
 use std::env;
@@ -22,9 +22,9 @@ fn main() {
     }
 
     // Edit here to change the server root
-    let path = env::home_dir().unwrap();
+    let path = std::path::PathBuf::from(env::var("HOME").expect("HOME env var not set"));
 
-    let handler: Box<Handler + Send + Sync>;
+    let handler: Box<dyn Handler + Send + Sync>;
 
     if dir_mode {
         handler = Box::new(ServerHandler::<DirectoryMode>::new(&path));

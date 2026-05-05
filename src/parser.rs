@@ -2,7 +2,7 @@ use std::error::Error;
 use std::io::{self, Read, BufRead, BufReader, ErrorKind};
 use std::fmt;
 use regex::Regex;
-use url::percent_encoding;
+use percent_encoding::percent_decode;
 
 #[derive(Debug)]
 pub struct ParseError {
@@ -43,17 +43,17 @@ impl<'a, H: ParserHandler> Parser<'a, H> {
         Parser { handler: handler }
     }
 
-    pub fn parse<R: Read>(&mut self, stream: &mut R) -> Result<(), Box<Error>> {
+    pub fn parse<R: Read>(&mut self, stream: &mut R) -> Result<(), Box<dyn Error>> {
         let mut buf_reader = BufReader::new(stream);
 
         let mut request_line = String::new();
-        let bytes_read = try!(buf_reader.read_line(&mut request_line));
+        let bytes_read = buf_reader.read_line(&mut request_line)?;
 
         if bytes_read == 0 || request_line.is_empty() {
             return Ok(());
         }
 
-        try!(self.handler.on_message_begin());
+        self.handler.on_message_begin()?;
 
         let re = Regex::new(
             r"^(?P<method>[A-Z]*?) (?P<url>[^\?]+)(\?(?P<query>[^#]+))? HTTP/(?P<version>\d\.\d)\r\n$"
@@ -61,24 +61,24 @@ impl<'a, H: ParserHandler> Parser<'a, H> {
 
         match re.captures(&request_line) {
             Some(cap) => {
-                let method = cap.name("method").unwrap();
-                try!(self.handler.on_method(method));
+                let method = cap.name("method").unwrap().as_str();
+                self.handler.on_method(method)?;
 
-                let url = percent_encoding::lossy_utf8_percent_decode(
-                    cap.name("url").unwrap().as_bytes()
-                );
-                try!(self.handler.on_url(&url));
+                let url = percent_decode(
+                    cap.name("url").unwrap().as_str().as_bytes()
+                ).decode_utf8_lossy();
+                self.handler.on_url(&url)?;
 
                 match cap.name("query") {
                     Some(query) => {
-                        let query = percent_encoding::lossy_utf8_percent_decode(query.as_bytes());
-                        try!(self.handler.on_query(&query));
+                        let query = percent_decode(query.as_str().as_bytes()).decode_utf8_lossy();
+                        self.handler.on_query(&query)?;
                     }
                     None => {}
                 }
 
-                let version = cap.name("version").unwrap();
-                try!(self.handler.on_http_version(version));
+                let version = cap.name("version").unwrap().as_str();
+                self.handler.on_http_version(version)?;
             },
             None => {
                 let error = io::Error::new(ErrorKind::InvalidInput, "Malformed Request");
@@ -107,7 +107,7 @@ impl<'a, H: ParserHandler> Parser<'a, H> {
                     let field = header[0];
                     let values = header[1].split(',').map(|h| h.trim()).collect();
 
-                    try!(self.handler.on_header(field, values));
+                    self.handler.on_header(field, values)?;
                 },
                 Err(e) => {
                     return Err(Box::new(e));

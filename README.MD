@@ -42,16 +42,30 @@ cargo run
 
 ### Options de ligne de commande
 
-Vous pouvez personnaliser le comportement du serveur avec les options suivantes :
+Vous pouvez personnaliser le comportement du serveur avec les en utilisant le séparateur `--` :
 
-- `-a, --addr <adresse>` : Définit l'adresse et le port sur lesquels le serveur doit écouter (ex: `127.0.0.1:80`).
-- `-d, --dir` : Active le listing des répertoires au sein de la racine du serveur.
+- `-a, --addr <adresse>` : Définit l'adresse et le port (ex: `127.0.0.1:8080`).
+- `-d, --dir` : Active le listing des répertoires (génère une page HTML pour les dossiers).
 
-**Exemple :**
+**Exemple complet :**
 
 ```bash
-cargo run -- --addr=127.0.0.1:8080 --dir
+cargo run -- -a 127.0.0.1:9001 -d
 ```
+
+## Guide de Démonstration Rapide
+
+Une fois le serveur lancé avec l'option `-d`, suivez ces étapes pour tester les fonctionnalités :
+
+1. **Vérifier le listage des dossiers** :
+   Ouvrez votre navigateur sur `http://127.0.0.1:9001` (ou utilisez `curl -i http://127.0.0.1:9001`). Vous devriez voir la liste des fichiers de votre répertoire racine.
+
+2. **Tester la lecture d'un fichier** :
+   Créez un fichier de test : `echo "Hello Rust" > test.txt`.
+   Accédez-y via `http://127.0.0.1:9001/test.txt`. Le serveur servira le contenu avec l'en-tête `Content-Type: text/plain`.
+
+3. **Tester la gestion d'erreur (404)** :
+   Essayez d'accéder à un fichier inexistant : `http://127.0.0.1:9001/random_file_xyz`. Vous recevrez une réponse `404 Not Found`.
 
 ### Configuration de la racine du serveur
 
